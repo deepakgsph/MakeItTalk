@@ -1,10 +1,7 @@
 from flask import Flask, jsonify, request, render_template, url_for, flash, redirect
 import sox, os
-from lib import synthesize
-import settings
 import json
 from datetime import datetime
-from werkzeug.utils import secure_filename
 import sys
 sys.path.append("thirdparty/AdaptiveWingLoss")
 import os, glob
