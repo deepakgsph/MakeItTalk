@@ -19,6 +19,12 @@ import util.utils as util
 from scipy.signal import savgol_filter
 from src.approaches.train_audio2landmark import Audio2landmark_model
 from base64 import b64encode
+import boto3
+import os
+
+s3_bucket_name = "sph-brand-voice-models"
+client = boto3.client('s3')
+s3 = boto3.resource('s3')
 
 app = Flask(__name__)
 
@@ -189,6 +195,18 @@ def voice_to_video():
         )
         mp4 = open('examples/{}'.format(OUTPUT_MP4_NAME), 'rb').read()
         data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
+
+        response = client.list_objects_v2(
+            Bucket=s3_bucket_name,
+            Prefix='models/'
+        )
+
+        for obj in response['Contents'][1:]:
+            filename = os.path.basename(obj['Key'])
+            s3.meta.client.download_file(s3_bucket_name, obj['Key'], './examples/' + str(filename))
+            print(filename)
+
+        print(settings.s3)
 
 
 if __name__ == '__main__':
