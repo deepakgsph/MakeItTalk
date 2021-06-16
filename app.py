@@ -196,17 +196,9 @@ def voice_to_video():
         mp4 = open('examples/{}'.format(OUTPUT_MP4_NAME), 'rb').read()
         data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
 
-        response = client.list_objects_v2(
-            Bucket=s3_bucket_name,
-            Prefix='models/'
-        )
-
-        for obj in response['Contents'][1:]:
-            filename = os.path.basename(obj['Key'])
-            s3.meta.client.download_file(s3_bucket_name, obj['Key'], './examples/' + str(filename))
-            print(filename)
-
-        print(settings.s3)
+        s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME),
+                                   s3_bucket_name,
+                                   'avatar/' + OUTPUT_MP4_NAME)
 
 
 if __name__ == '__main__':
