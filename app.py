@@ -100,7 +100,8 @@ def voice_to_video():
     au_data = []
     au_emb = []
     ains = glob.glob1('examples', '*.wav')
-    ains = [item for item in ains if (item is not 'tmp.wav' and item is audio_file)]
+    print(ains)
+    ains = [item for item in ains if (item is not 'tmp.wav' and item == audio_file)]
     ains.sort()
     print(ains)
     for ain in ains:
