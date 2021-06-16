@@ -205,6 +205,7 @@ def voice_to_video():
         output_dir = "examples/"
         for filee in os.listdir(input_dir):
             if filee.endswith(OUTPUT_MP4_NAME):
+                print(filee)
                 input_name = input_dir + OUTPUT_MP4_NAME
                 output_name = output_dir + OUTPUT_MP4_NAME_CR
                 bashCommand = "ffmpeg - i " + input_name + " - vf crop=256:256:256:0 " +  output_name
@@ -212,8 +213,7 @@ def voice_to_video():
                 output, error = process.communicate()
 
         s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR),
-                                   s3_bucket_name,
-                                   'avatar/' + OUTPUT_MP4_NAME_CR)
+                                   s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
         response["avatar_output"] = OUTPUT_MP4_NAME_CR
     response = jsonify(response)
 
