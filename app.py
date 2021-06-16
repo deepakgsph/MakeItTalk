@@ -207,7 +207,7 @@ def voice_to_video():
             if filee.endswith(OUTPUT_MP4_NAME):
                 input_name = input_dir + OUTPUT_MP4_NAME
                 output_name = output_dir + OUTPUT_MP4_NAME_CR
-                bashCommand = "ffmpeg - i " + input_name + " - vf 'crop=256:256:256:0' " +  output_name
+                bashCommand = "ffmpeg - i " + input_name + " - vf crop=256:256:256:0 " +  output_name
                 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
                 output, error = process.communicate()
 
