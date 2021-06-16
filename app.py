@@ -36,6 +36,7 @@ def voice_to_video():
     if image_file is None:
         image_file = default_head_name
     audio_file = request.args.get('audio_file')
+    print(image_file, audio_file)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
