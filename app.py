@@ -43,6 +43,7 @@ def voice_to_video():
     if image_file is None:
         image_file = default_head_name
     audio_file = request.args.get('audio_file')
+    print(image_file, audio_file)
     s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file), 'examples/' + str(image_file))
     s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(audio_file),
                                  'examples/' + str(audio_file))
