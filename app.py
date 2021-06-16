@@ -23,6 +23,7 @@ import boto3
 import os
 
 s3_bucket_name = "sph-brand-voice-models"
+input_bucket_folder = "api-data"
 client = boto3.client('s3')
 s3 = boto3.resource('s3')
 
@@ -42,6 +43,9 @@ def voice_to_video():
     if image_file is None:
         image_file = default_head_name
     audio_file = request.args.get('audio_file')
+    s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file), 'examples/' + str(image_file))
+    s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(audio_file),
+                                 'examples/' + str(audio_file))
     print(image_file, audio_file)
 
     parser = argparse.ArgumentParser()
@@ -187,7 +191,7 @@ def voice_to_video():
         os.remove(os.path.join('examples', fls[i]))
         print("{} / {}: Landmark->Face...".format(i + 1, len(fls)), file=sys.stderr)
     print("Done!", file=sys.stderr)
-
+    response = {}
     for ain in ains:
         OUTPUT_MP4_NAME = '{}_pred_fls_{}_audio_embed.mp4'.format(
             opt_parser.jpg.split('.')[0],
@@ -199,6 +203,10 @@ def voice_to_video():
         s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME),
                                    s3_bucket_name,
                                    'avatar/' + OUTPUT_MP4_NAME)
+        response["avatar_output"] = OUTPUT_MP4_NAME
+    response = jsonify(response)
+
+    return response
 
 
 if __name__ == '__main__':
