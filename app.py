@@ -21,9 +21,10 @@ import time
 import util.utils as util
 from scipy.signal import savgol_filter
 from src.approaches.train_audio2landmark import Audio2landmark_model
+from base64 import b64encode
 
 
-default_head_name = 'paint_boy'      # the image name (with no .jpg) to animate
+default_head_name = 'paint_boy.jpg'      # the image name (with no .jpg) to animate
 ADD_NAIVE_EYE = True                 # whether add naive eye blink
 CLOSE_INPUT_FACE_MOUTH = False       # if your image has an opened mouth, put this as True, else False
 AMP_LIP_SHAPE_X = 2.                 # amplify the lip motion in horizontal direction
@@ -34,10 +35,12 @@ AMP_HEAD_POSE_MOTION = 0.7           # amplify the head pose motion (usually sma
 @app.route('/voice-to-video', methods=['GET', 'POST'])
 def voice_to_video():
     image_file = request.args.get('image_file')
+    if image_file is None:
+        image_file = default_head_name
     audio_file = request.args.get('audio_file')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--jpg', type=str, default='{}.jpg'.format(image_file))
+    parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
     parser.add_argument('--close_input_face_mouth', default=CLOSE_INPUT_FACE_MOUTH, action='store_true')
 
     parser.add_argument('--load_AUTOVC_name', type=str, default='examples/ckpt/ckpt_autovc.pth')
@@ -98,7 +101,7 @@ def voice_to_video():
     au_data = []
     au_emb = []
     ains = glob.glob1('examples', '*.wav')
-    ains = [item for item in ains if item is not 'tmp.wav']
+    ains = [item for item in ains if (item is not 'tmp.wav' and item is audio_file)]
     ains.sort()
     for ain in ains:
         os.system('ffmpeg -y -loglevel error -i examples/{} -ar 16000 examples/tmp.wav'.format(ain))
@@ -175,9 +178,17 @@ def voice_to_video():
             model.single_test(jpg=img, fls=fl, filename=fls[i], prefix=opt_parser.jpg.split('.')[0])
             print('finish image2image gen')
         os.remove(os.path.join('examples', fls[i]))
+        print("{} / {}: Landmark->Face...".format(i + 1, len(fls)), file=sys.stderr)
+    print("Done!", file=sys.stderr)
 
-
+    for ain in ains:
+        OUTPUT_MP4_NAME = '{}_pred_fls_{}_audio_embed.mp4'.format(
+            opt_parser.jpg.split('.')[0],
+            ain.split('.')[0]
+        )
+        mp4 = open('examples/{}'.format(OUTPUT_MP4_NAME), 'rb').read()
+        data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=1900, debug=True)
