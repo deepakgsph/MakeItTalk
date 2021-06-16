@@ -20,6 +20,7 @@ from scipy.signal import savgol_filter
 from src.approaches.train_audio2landmark import Audio2landmark_model
 from base64 import b64encode
 
+app = Flask(__name__)
 
 default_head_name = 'paint_boy.jpg'      # the image name (with no .jpg) to animate
 ADD_NAIVE_EYE = True                 # whether add naive eye blink
