@@ -102,6 +102,7 @@ def voice_to_video():
     ains = glob.glob1('examples', '*.wav')
     ains = [item for item in ains if (item is not 'tmp.wav' and item is audio_file)]
     ains.sort()
+    print(ains)
     for ain in ains:
         os.system('ffmpeg -y -loglevel error -i examples/{} -ar 16000 examples/tmp.wav'.format(ain))
         shutil.copyfile('examples/tmp.wav', 'examples/{}'.format(ain))
