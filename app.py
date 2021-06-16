@@ -21,6 +21,7 @@ from src.approaches.train_audio2landmark import Audio2landmark_model
 from base64 import b64encode
 import boto3
 import os
+import subprocess
 
 s3_bucket_name = "sph-brand-voice-models"
 input_bucket_folder = "api-data"
@@ -198,13 +199,22 @@ def voice_to_video():
             opt_parser.jpg.split('.')[0],
             ain.split('.')[0]
         )
-        mp4 = open('examples/{}'.format(OUTPUT_MP4_NAME), 'rb').read()
-        data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
 
-        s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME),
+        OUTPUT_MP4_NAME_CR = OUTPUT_MP4_NAME[:-4] + "_cr.mp4"
+        input_dir = "examples/"
+        output_dir = "examples/"
+        for filee in os.listdir(input_dir):
+            if filee.endswith(OUTPUT_MP4_NAME):
+                input_name = input_dir + OUTPUT_MP4_NAME
+                output_name = output_dir + OUTPUT_MP4_NAME_CR
+                bashCommand = "ffmpeg - i " + input_name + " - vf 'crop=256:256:256:0' " +  output_name
+                process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+                output, error = process.communicate()
+
+        s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR),
                                    s3_bucket_name,
-                                   'avatar/' + OUTPUT_MP4_NAME)
-        response["avatar_output"] = OUTPUT_MP4_NAME
+                                   'avatar/' + OUTPUT_MP4_NAME_CR)
+        response["avatar_output"] = OUTPUT_MP4_NAME_CR
     response = jsonify(response)
 
     return response
