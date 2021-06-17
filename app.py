@@ -1,8 +1,11 @@
-from flask import Flask, jsonify, request, render_template, url_for, flash, redirect
-import sox, os
+import datetime
 import json
-from datetime import datetime
+import os
+import sox
 import sys
+import uuid
+from flask import Flask, jsonify, request, render_template, url_for, flash, redirect
+
 sys.path.append("thirdparty/AdaptiveWingLoss")
 import os, glob
 import numpy as np
@@ -30,12 +33,19 @@ s3 = boto3.resource('s3')
 
 app = Flask(__name__)
 
-default_head_name = 'paint_boy.jpg'      # the image name (with no .jpg) to animate
-ADD_NAIVE_EYE = True                 # whether add naive eye blink
-CLOSE_INPUT_FACE_MOUTH = False       # if your image has an opened mouth, put this as True, else False
-AMP_LIP_SHAPE_X = 2.                 # amplify the lip motion in horizontal direction
-AMP_LIP_SHAPE_Y = 2.                 # amplify the lip motion in vertical direction
-AMP_HEAD_POSE_MOTION = 0.7           # amplify the head pose motion (usually smaller than 1.0, put it to 0. for a static head pose)
+default_head_name = 'paint_boy.jpg'  # the image name (with no .jpg) to animate
+ADD_NAIVE_EYE = True  # whether add naive eye blink
+CLOSE_INPUT_FACE_MOUTH = False  # if your image has an opened mouth, put this as True, else False
+AMP_LIP_SHAPE_X = 2.  # amplify the lip motion in horizontal direction
+AMP_LIP_SHAPE_Y = 2.  # amplify the lip motion in vertical direction
+AMP_HEAD_POSE_MOTION = 0.7  # amplify the head pose motion (usually smaller than 1.0, put it to 0. for a static head pose)
+
+
+def random_filename(ext):
+    basename = "sph_avatar"
+    suffix = datetime.datetime.now().strftime("%y%m%d_") + uuid.uuid4().hex[:5]
+    filename = "_".join([basename, suffix]) + str(ext)
+    return filename
 
 
 @app.route('/voice-to-video', methods=['GET', 'POST'])
@@ -45,7 +55,8 @@ def voice_to_video():
         image_file = default_head_name
     audio_file = request.args.get('audio_file')
     print(image_file, audio_file)
-    s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file), 'examples/' + str(image_file))
+    s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file),
+                                 'examples/' + str(image_file))
     s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(audio_file),
                                  'examples/' + str(audio_file))
     print(image_file, audio_file)
@@ -200,7 +211,8 @@ def voice_to_video():
             ain.split('.')[0]
         )
 
-        OUTPUT_MP4_NAME_CR = OUTPUT_MP4_NAME[:-4] + "_cr.mp4"
+        OUTPUT_MP4_NAME_CR = random_filename(".mp4")
+
         input_dir = "examples/"
         output_dir = "examples/"
         for filee in os.listdir(input_dir):
@@ -208,7 +220,7 @@ def voice_to_video():
                 print(filee)
                 input_name = input_dir + OUTPUT_MP4_NAME
                 output_name = output_dir + OUTPUT_MP4_NAME_CR
-                bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " +  output_name
+                bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
                 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
                 output, error = process.communicate()
 
