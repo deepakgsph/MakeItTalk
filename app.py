@@ -179,7 +179,7 @@ def voice_to_video():
     else:
         model.test(au_emb=None)
 
-    fls = glob.glob1('examples', 'pred_fls_*.txt')
+    fls = glob.glob1('examples', 'pred_fls_{}_audio_embed.txt'.format(audio_file[:-4], ))
     fls.sort()
 
     for i in range(0, len(fls)):
