@@ -215,14 +215,19 @@ def voice_to_video():
 
         input_dir = "examples/"
         output_dir = "examples/"
+        crop = False
         for filee in os.listdir(input_dir):
             if filee.endswith(OUTPUT_MP4_NAME):
                 print(filee)
                 input_name = input_dir + OUTPUT_MP4_NAME
                 output_name = output_dir + OUTPUT_MP4_NAME_CR
-                bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
+                if crop:
+                    bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
+                else:
+                    bashCommand = "sudo cp " + input_name + " " + output_name
                 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
                 output, error = process.communicate()
+
 
         s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR),
                                    s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
