@@ -215,7 +215,7 @@ def voice_to_video():
 
         input_dir = "examples/"
         output_dir = "examples/"
-        crop = False
+        crop = True
         for filee in os.listdir(input_dir):
             if filee.endswith(OUTPUT_MP4_NAME):
                 print(filee)
