@@ -26,6 +26,9 @@ from base64 import b64encode
 import boto3
 import os
 import subprocess
+import timeit
+
+
 
 gvs = {}
 
@@ -66,6 +69,8 @@ def random_filename(ext):
 
 @app.route('/voice-to-video', methods=['GET', 'POST'])
 def voice_to_video():
+    start = timeit.timeit()
+
     global gvs
     image_file = request.args.get('image_file')
     if image_file is None:
@@ -275,6 +280,9 @@ def voice_to_video():
                                    s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
         response["avatar_output"] = OUTPUT_MP4_NAME_CR
     response = jsonify(response)
+
+    end = timeit.timeit()
+    print("Voice To Video Response Time ", end - start)
 
     return response
 
