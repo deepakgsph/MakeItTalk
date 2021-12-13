@@ -175,7 +175,7 @@ def voice_to_video():
         c = AutoVC_mel_Convertor('examples')
 
         au_data_i = c.convert_single_wav_to_autovc_input(audio_filename=os.path.join('examples', ain),
-                                                         autovc_model_path=opt_parser.load_AUTOVC_name)
+                                                         autovc_model_path=gvs[image_file]["opt_parser"].load_AUTOVC_name)
         au_data += au_data_i
     if (os.path.isfile('examples/tmp.wav')):
         os.remove('examples/tmp.wav')
@@ -248,7 +248,7 @@ def voice_to_video():
     response = {}
     for ain in ains:
         OUTPUT_MP4_NAME = '{}_pred_fls_{}_audio_embed.mp4'.format(
-            opt_parser.jpg.split('.')[0],
+            gvs[image_file]["opt_parser"].jpg.split('.')[0],
             ain.split('.')[0]
         )
 
