@@ -5,6 +5,7 @@ import sox
 import sys
 import uuid
 from flask import Flask, jsonify, request, render_template, url_for, flash, redirect
+from pydub import AudioSegment
 
 sys.path.append("thirdparty/AdaptiveWingLoss")
 import os, glob
@@ -26,7 +27,9 @@ import boto3
 import os
 import subprocess
 
-s3_bucket_name = "sph-brand-voice-models"
+gvs = {}
+
+s3_bucket_name = "sph-brand-voice-models-aiuser"
 input_bucket_folder = "api-data"
 client = boto3.client('s3')
 s3 = boto3.resource('s3')
@@ -41,6 +44,19 @@ AMP_LIP_SHAPE_Y = 2.  # amplify the lip motion in vertical direction
 AMP_HEAD_POSE_MOTION = 0.7  # amplify the head pose motion (usually smaller than 1.0, put it to 0. for a static head pose)
 
 
+def add_silence(audio_in_file, audio_out_file):
+    global gvs
+    if "one_sec_segment" not in gvs:
+       gvs["one_sec_segment"] = AudioSegment.silent(duration=1000)
+    song = AudioSegment.from_wav(audio_in_file)
+
+    # Add above two audio segments
+    final_song = song + gvs["one_sec_segment"]
+
+    # Either save modified audio
+    final_song.export(audio_out_file, format="wav")
+
+
 def random_filename(ext):
     basename = "sph_avatar"
     suffix = datetime.datetime.now().strftime("%y%m%d_") + uuid.uuid4().hex[:5]
@@ -50,66 +66,81 @@ def random_filename(ext):
 
 @app.route('/voice-to-video', methods=['GET', 'POST'])
 def voice_to_video():
+    global gvs
     image_file = request.args.get('image_file')
     if image_file is None:
         image_file = default_head_name
     audio_file = request.args.get('audio_file')
     print(image_file, audio_file)
-    s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file),
-                                 'examples/' + str(image_file))
+    if image_file not in gvs:
+        gvs[image_file] = {}
+    else:
+        s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file),
+                                     'examples/' + str(image_file))
     s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(audio_file),
                                  'examples/' + str(audio_file))
     print(image_file, audio_file)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
-    parser.add_argument('--close_input_face_mouth', default=CLOSE_INPUT_FACE_MOUTH, action='store_true')
+    if "parser" not in gvs[image_file]:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
+        parser.add_argument('--close_input_face_mouth', default=CLOSE_INPUT_FACE_MOUTH, action='store_true')
 
-    parser.add_argument('--load_AUTOVC_name', type=str, default='examples/ckpt/ckpt_autovc.pth')
-    parser.add_argument('--load_a2l_G_name', type=str, default='examples/ckpt/ckpt_speaker_branch.pth')
-    parser.add_argument('--load_a2l_C_name', type=str,
-                        default='examples/ckpt/ckpt_content_branch.pth')  # ckpt_audio2landmark_c.pth')
-    parser.add_argument('--load_G_name', type=str,
-                        default='examples/ckpt/ckpt_116_i2i_comb.pth')  # ckpt_image2image.pth') #ckpt_i2i_finetune_150.pth') #c
+        parser.add_argument('--load_AUTOVC_name', type=str, default='examples/ckpt/ckpt_autovc.pth')
+        parser.add_argument('--load_a2l_G_name', type=str, default='examples/ckpt/ckpt_speaker_branch.pth')
+        parser.add_argument('--load_a2l_C_name', type=str,
+                            default='examples/ckpt/ckpt_content_branch.pth')  # ckpt_audio2landmark_c.pth')
+        parser.add_argument('--load_G_name', type=str,
+                            default='examples/ckpt/ckpt_116_i2i_comb.pth')  # ckpt_image2image.pth') #ckpt_i2i_finetune_150.pth') #c
 
-    parser.add_argument('--amp_lip_x', type=float, default=AMP_LIP_SHAPE_X)
-    parser.add_argument('--amp_lip_y', type=float, default=AMP_LIP_SHAPE_Y)
-    parser.add_argument('--amp_pos', type=float, default=AMP_HEAD_POSE_MOTION)
-    parser.add_argument('--reuse_train_emb_list', type=str, nargs='+',
-                        default=[])  # ['iWeklsXc0H8']) #['45hn7-LXDX8']) #['E_kmpT-EfOg']) #'iWeklsXc0H8', '29k8RtSUjE0', '45hn7-LXDX8',
-    parser.add_argument('--add_audio_in', default=False, action='store_true')
-    parser.add_argument('--comb_fan_awing', default=False, action='store_true')
-    parser.add_argument('--output_folder', type=str, default='examples')
+        parser.add_argument('--amp_lip_x', type=float, default=AMP_LIP_SHAPE_X)
+        parser.add_argument('--amp_lip_y', type=float, default=AMP_LIP_SHAPE_Y)
+        parser.add_argument('--amp_pos', type=float, default=AMP_HEAD_POSE_MOTION)
+        parser.add_argument('--reuse_train_emb_list', type=str, nargs='+',
+                            default=[])  # ['iWeklsXc0H8']) #['45hn7-LXDX8']) #['E_kmpT-EfOg']) #'iWeklsXc0H8', '29k8RtSUjE0', '45hn7-LXDX8',
+        parser.add_argument('--add_audio_in', default=False, action='store_true')
+        parser.add_argument('--comb_fan_awing', default=False, action='store_true')
+        parser.add_argument('--output_folder', type=str, default='examples')
 
-    parser.add_argument('--test_end2end', default=True, action='store_true')
-    parser.add_argument('--dump_dir', type=str, default='', help='')
-    parser.add_argument('--pos_dim', default=7, type=int)
-    parser.add_argument('--use_prior_net', default=True, action='store_true')
-    parser.add_argument('--transformer_d_model', default=32, type=int)
-    parser.add_argument('--transformer_N', default=2, type=int)
-    parser.add_argument('--transformer_heads', default=2, type=int)
-    parser.add_argument('--spk_emb_enc_size', default=16, type=int)
-    parser.add_argument('--init_content_encoder', type=str, default='')
-    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
-    parser.add_argument('--reg_lr', type=float, default=1e-6, help='weight decay')
-    parser.add_argument('--write', default=False, action='store_true')
-    parser.add_argument('--segment_batch_size', type=int, default=1, help='batch size')
-    parser.add_argument('--emb_coef', default=3.0, type=float)
-    parser.add_argument('--lambda_laplacian_smooth_loss', default=1.0, type=float)
-    parser.add_argument('--use_11spk_only', default=False, action='store_true')
-    parser.add_argument('-f')
+        parser.add_argument('--test_end2end', default=True, action='store_true')
+        parser.add_argument('--dump_dir', type=str, default='', help='')
+        parser.add_argument('--pos_dim', default=7, type=int)
+        parser.add_argument('--use_prior_net', default=True, action='store_true')
+        parser.add_argument('--transformer_d_model', default=32, type=int)
+        parser.add_argument('--transformer_N', default=2, type=int)
+        parser.add_argument('--transformer_heads', default=2, type=int)
+        parser.add_argument('--spk_emb_enc_size', default=16, type=int)
+        parser.add_argument('--init_content_encoder', type=str, default='')
+        parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
+        parser.add_argument('--reg_lr', type=float, default=1e-6, help='weight decay')
+        parser.add_argument('--write', default=False, action='store_true')
+        parser.add_argument('--segment_batch_size', type=int, default=1, help='batch size')
+        parser.add_argument('--emb_coef', default=3.0, type=float)
+        parser.add_argument('--lambda_laplacian_smooth_loss', default=1.0, type=float)
+        parser.add_argument('--use_11spk_only', default=False, action='store_true')
+        parser.add_argument('-f')
 
-    opt_parser = parser.parse_args()
+        gvs[image_file]["parser"] = parser
 
-    img = cv2.imread('examples/' + opt_parser.jpg)
-    predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
-    shapes = predictor.get_landmarks(img)
-    if (not shapes or len(shapes) != 1):
+    if "opt_parser" not in gvs[image_file]:
+        opt_parser = gvs[image_file]["parser"].parse_args()
+        gvs[image_file]["opt_parser"] = opt_parser
+    if "img" not in gvs[image_file]:
+        img = cv2.imread('examples/' + gvs[image_file]["opt_parser"].jpg)
+        gvs[image_file]["img"] = img
+    if "predictor" not in gvs:
+        predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
+        gvs["predictor"] = predictor
+    if "shapes" not in gvs[image_file]:
+        shapes = gvs["predictor"].get_landmarks(gvs[image_file]["img"])
+        gvs[image_file]["shapes"] = shapes
+
+    if (not gvs[image_file]["shapes"] or len(gvs[image_file]["shapes"]) != 1):
         print('Cannot detect face landmarks. Exit.')
         exit(-1)
-    shape_3d = shapes[0]
+    shape_3d = gvs[image_file]["shapes"][0]
 
-    if (opt_parser.close_input_face_mouth):
+    if (gvs[image_file]["opt_parser"].close_input_face_mouth):
         util.close_input_face_mouth(shape_3d)
 
     shape_3d[48:, 0] = (shape_3d[48:, 0] - np.mean(shape_3d[48:, 0])) * 1.05 + np.mean(shape_3d[48:, 0])  # wider lips
@@ -123,10 +154,14 @@ def voice_to_video():
     au_data = []
     au_emb = []
     ains = glob.glob1('examples', '*.wav')
-    print(ains)
+    #print(ains)
     ains = [item for item in ains if (item is not 'tmp.wav' and item == audio_file)]
-    ains.sort()
+    #ains.sort()
     print(ains)
+    for i in range(len(ains)):
+        add_silence("examples/" + ains[i], "examples/" + ains[i])
+        # ains[i] = ains[i][:-4] + "_sil.wav"
+
     for ain in ains:
         os.system('ffmpeg -y -loglevel error -i examples/{} -ar 16000 examples/tmp.wav'.format(ain))
         shutil.copyfile('examples/tmp.wav', 'examples/{}'.format(ain))
@@ -173,11 +208,14 @@ def voice_to_video():
         gaze = {'rot_trans': rot_tran, 'rot_quat': rot_quat, 'anchor_t_shape': anchor_t_shape}
         pickle.dump(gaze, fp)
 
-    model = Audio2landmark_model(opt_parser, jpg_shape=shape_3d)
-    if (len(opt_parser.reuse_train_emb_list) == 0):
-        model.test(au_emb=au_emb)
+    if "model" not in gvs[image_file]:
+        model = Audio2landmark_model(gvs[image_file]["opt_parser"], jpg_shape=shape_3d)
+        gvs[image_file]["model"] = model
+
+    if (len(gvs[image_file]["opt_parser"].reuse_train_emb_list) == 0):
+        gvs[image_file]["model"].test(au_emb=au_emb)
     else:
-        model.test(au_emb=None)
+        gvs[image_file]["model"].test(au_emb=None)
 
     fls = glob.glob1('examples', 'pred_fls_{}_audio_embed.txt'.format(audio_file[:-4], ))
     fls.sort()
@@ -197,9 +235,12 @@ def voice_to_video():
         fl = fl.reshape((-1, 68, 3))
 
         ''' STEP 6: Imag2image translation '''
-        model = Image_translation_block(opt_parser, single_test=True)
+        if "model_img" not in gvs[image_file]:
+            model_img = Image_translation_block(gvs[image_file]["opt_parser"], single_test=True)
+            gvs[image_file]["model_img"] = model_img
+
         with torch.no_grad():
-            model.single_test(jpg=img, fls=fl, filename=fls[i], prefix=opt_parser.jpg.split('.')[0])
+            gvs[image_file]["model_img"].single_test(jpg=gvs[image_file]["img"], fls=fl, filename=fls[i], prefix=gvs[image_file]["opt_parser"].jpg.split('.')[0])
             print('finish image2image gen')
         os.remove(os.path.join('examples', fls[i]))
         print("{} / {}: Landmark->Face...".format(i + 1, len(fls)), file=sys.stderr)
@@ -216,18 +257,19 @@ def voice_to_video():
         input_dir = "examples/"
         output_dir = "examples/"
         crop = True
+        """
         for filee in os.listdir(input_dir):
             if filee.endswith(OUTPUT_MP4_NAME):
                 print(filee)
-                input_name = input_dir + OUTPUT_MP4_NAME
-                output_name = output_dir + OUTPUT_MP4_NAME_CR
-                if crop:
-                    bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
-                else:
-                    bashCommand = "sudo cp " + input_name + " " + output_name
-                process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-                output, error = process.communicate()
-
+        """
+        input_name = input_dir + OUTPUT_MP4_NAME
+        output_name = output_dir + OUTPUT_MP4_NAME_CR
+        if crop:
+            bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
+        else:
+            bashCommand = "sudo cp " + input_name + " " + output_name
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
 
         s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR),
                                    s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
