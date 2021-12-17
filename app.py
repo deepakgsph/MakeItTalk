@@ -226,6 +226,8 @@ def voice_to_video():
     fls = glob.glob1('examples', 'pred_fls_{}_audio_embed.txt'.format(audio_file[:-4], ))
     fls.sort()
 
+    print(fls)
+
     for i in range(0, len(fls)):
         fl = np.loadtxt(os.path.join('examples', fls[i])).reshape((-1, 68, 3))
         fl[:, :, 0:2] = -fl[:, :, 0:2]
