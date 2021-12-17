@@ -28,6 +28,7 @@ import os
 import subprocess
 from timeit import default_timer as timer
 import copy
+import shutil
 
 
 gvs = {}
@@ -79,11 +80,13 @@ def voice_to_video():
     print(image_file, audio_file)
     if image_file not in gvs:
         gvs[image_file] = {}
+    """
     else:
         s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(image_file),
                                      'examples/' + str(image_file))
     s3.meta.client.download_file(s3_bucket_name, input_bucket_folder + "/" + str(audio_file),
                                  'examples/' + str(audio_file))
+    """
     print(image_file, audio_file)
 
     #if "parser" not in gvs[image_file]:
@@ -291,8 +294,7 @@ def voice_to_video():
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
 
-        s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR),
-                                   s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
+        #s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR), s3_bucket_name, 'avatar/' + OUTPUT_MP4_NAME_CR)
         response["avatar_output"] = OUTPUT_MP4_NAME_CR
     response = jsonify(response)
 
