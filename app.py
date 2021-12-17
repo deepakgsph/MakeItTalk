@@ -27,6 +27,7 @@ import boto3
 import os
 import subprocess
 from timeit import default_timer as timer
+import copy
 
 
 gvs = {}
@@ -218,10 +219,12 @@ def voice_to_video():
         model = Audio2landmark_model(gvs[image_file]["opt_parser"], jpg_shape=shape_3d)
         gvs[image_file]["model"] = model
 
+    model = copy.deepcopy(gvs[image_file]["model"])
+
     if (len(gvs[image_file]["opt_parser"].reuse_train_emb_list) == 0):
-        gvs[image_file]["model"].test(au_emb=au_emb)
+        model.test(au_emb=au_emb)
     else:
-        gvs[image_file]["model"].test(au_emb=None)
+        model.test(au_emb=None)
 
     fls = glob.glob1('examples', 'pred_fls_{}_audio_embed.txt'.format(audio_file[:-4], ))
     fls.sort()
