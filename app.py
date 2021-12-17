@@ -86,50 +86,50 @@ def voice_to_video():
                                  'examples/' + str(audio_file))
     print(image_file, audio_file)
 
-    if "parser" not in gvs[image_file]:
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
-        parser.add_argument('--close_input_face_mouth', default=CLOSE_INPUT_FACE_MOUTH, action='store_true')
+    #if "parser" not in gvs[image_file]:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--jpg', type=str, default='{}'.format(image_file))
+    parser.add_argument('--close_input_face_mouth', default=CLOSE_INPUT_FACE_MOUTH, action='store_true')
 
-        parser.add_argument('--load_AUTOVC_name', type=str, default='examples/ckpt/ckpt_autovc.pth')
-        parser.add_argument('--load_a2l_G_name', type=str, default='examples/ckpt/ckpt_speaker_branch.pth')
-        parser.add_argument('--load_a2l_C_name', type=str,
-                            default='examples/ckpt/ckpt_content_branch.pth')  # ckpt_audio2landmark_c.pth')
-        parser.add_argument('--load_G_name', type=str,
-                            default='examples/ckpt/ckpt_116_i2i_comb.pth')  # ckpt_image2image.pth') #ckpt_i2i_finetune_150.pth') #c
+    parser.add_argument('--load_AUTOVC_name', type=str, default='examples/ckpt/ckpt_autovc.pth')
+    parser.add_argument('--load_a2l_G_name', type=str, default='examples/ckpt/ckpt_speaker_branch.pth')
+    parser.add_argument('--load_a2l_C_name', type=str,
+                        default='examples/ckpt/ckpt_content_branch.pth')  # ckpt_audio2landmark_c.pth')
+    parser.add_argument('--load_G_name', type=str,
+                        default='examples/ckpt/ckpt_116_i2i_comb.pth')  # ckpt_image2image.pth') #ckpt_i2i_finetune_150.pth') #c
 
-        parser.add_argument('--amp_lip_x', type=float, default=AMP_LIP_SHAPE_X)
-        parser.add_argument('--amp_lip_y', type=float, default=AMP_LIP_SHAPE_Y)
-        parser.add_argument('--amp_pos', type=float, default=AMP_HEAD_POSE_MOTION)
-        parser.add_argument('--reuse_train_emb_list', type=str, nargs='+',
-                            default=[])  # ['iWeklsXc0H8']) #['45hn7-LXDX8']) #['E_kmpT-EfOg']) #'iWeklsXc0H8', '29k8RtSUjE0', '45hn7-LXDX8',
-        parser.add_argument('--add_audio_in', default=False, action='store_true')
-        parser.add_argument('--comb_fan_awing', default=False, action='store_true')
-        parser.add_argument('--output_folder', type=str, default='examples')
+    parser.add_argument('--amp_lip_x', type=float, default=AMP_LIP_SHAPE_X)
+    parser.add_argument('--amp_lip_y', type=float, default=AMP_LIP_SHAPE_Y)
+    parser.add_argument('--amp_pos', type=float, default=AMP_HEAD_POSE_MOTION)
+    parser.add_argument('--reuse_train_emb_list', type=str, nargs='+',
+                        default=[])  # ['iWeklsXc0H8']) #['45hn7-LXDX8']) #['E_kmpT-EfOg']) #'iWeklsXc0H8', '29k8RtSUjE0', '45hn7-LXDX8',
+    parser.add_argument('--add_audio_in', default=False, action='store_true')
+    parser.add_argument('--comb_fan_awing', default=False, action='store_true')
+    parser.add_argument('--output_folder', type=str, default='examples')
 
-        parser.add_argument('--test_end2end', default=True, action='store_true')
-        parser.add_argument('--dump_dir', type=str, default='', help='')
-        parser.add_argument('--pos_dim', default=7, type=int)
-        parser.add_argument('--use_prior_net', default=True, action='store_true')
-        parser.add_argument('--transformer_d_model', default=32, type=int)
-        parser.add_argument('--transformer_N', default=2, type=int)
-        parser.add_argument('--transformer_heads', default=2, type=int)
-        parser.add_argument('--spk_emb_enc_size', default=16, type=int)
-        parser.add_argument('--init_content_encoder', type=str, default='')
-        parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
-        parser.add_argument('--reg_lr', type=float, default=1e-6, help='weight decay')
-        parser.add_argument('--write', default=False, action='store_true')
-        parser.add_argument('--segment_batch_size', type=int, default=1, help='batch size')
-        parser.add_argument('--emb_coef', default=3.0, type=float)
-        parser.add_argument('--lambda_laplacian_smooth_loss', default=1.0, type=float)
-        parser.add_argument('--use_11spk_only', default=False, action='store_true')
-        parser.add_argument('-f')
+    parser.add_argument('--test_end2end', default=True, action='store_true')
+    parser.add_argument('--dump_dir', type=str, default='', help='')
+    parser.add_argument('--pos_dim', default=7, type=int)
+    parser.add_argument('--use_prior_net', default=True, action='store_true')
+    parser.add_argument('--transformer_d_model', default=32, type=int)
+    parser.add_argument('--transformer_N', default=2, type=int)
+    parser.add_argument('--transformer_heads', default=2, type=int)
+    parser.add_argument('--spk_emb_enc_size', default=16, type=int)
+    parser.add_argument('--init_content_encoder', type=str, default='')
+    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
+    parser.add_argument('--reg_lr', type=float, default=1e-6, help='weight decay')
+    parser.add_argument('--write', default=False, action='store_true')
+    parser.add_argument('--segment_batch_size', type=int, default=1, help='batch size')
+    parser.add_argument('--emb_coef', default=3.0, type=float)
+    parser.add_argument('--lambda_laplacian_smooth_loss', default=1.0, type=float)
+    parser.add_argument('--use_11spk_only', default=False, action='store_true')
+    parser.add_argument('-f')
 
-        gvs[image_file]["parser"] = parser
+    gvs[image_file]["parser"] = parser
 
-    if "opt_parser" not in gvs[image_file]:
-        opt_parser = gvs[image_file]["parser"].parse_args()
-        gvs[image_file]["opt_parser"] = opt_parser
+    #if "opt_parser" not in gvs[image_file]:
+    opt_parser = gvs[image_file]["parser"].parse_args()
+    gvs[image_file]["opt_parser"] = opt_parser
     #if "img" not in gvs[image_file]:
     img = cv2.imread('examples/' + gvs[image_file]["opt_parser"].jpg)
     gvs[image_file]["img"] = img
