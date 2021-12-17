@@ -219,7 +219,8 @@ def voice_to_video():
         model = Audio2landmark_model(gvs[image_file]["opt_parser"], jpg_shape=shape_3d)
         gvs[image_file]["model"] = model
 
-    model = copy.deepcopy(gvs[image_file]["model"])
+    #model = copy.deepcopy(gvs[image_file]["model"])
+    model = Audio2landmark_model(gvs[image_file]["opt_parser"], jpg_shape=shape_3d)
 
     if (len(gvs[image_file]["opt_parser"].reuse_train_emb_list) == 0):
         model.test(au_emb=au_emb)
