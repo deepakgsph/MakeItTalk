@@ -133,9 +133,9 @@ def voice_to_video():
     #if "img" not in gvs[image_file]:
     img = cv2.imread('examples/' + gvs[image_file]["opt_parser"].jpg)
     gvs[image_file]["img"] = img
-    if "predictor" not in gvs:
-        predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
-        gvs["predictor"] = predictor
+    #if "predictor" not in gvs:
+    predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
+    gvs["predictor"] = predictor
     if "shapes" not in gvs[image_file]:
         shapes = gvs["predictor"].get_landmarks(gvs[image_file]["img"])
         gvs[image_file]["shapes"] = shapes
