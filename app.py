@@ -181,6 +181,8 @@ def voice_to_video():
         au_data_i = c.convert_single_wav_to_autovc_input(audio_filename=os.path.join('examples', ain),
                                                          autovc_model_path=gvs[image_file]["opt_parser"].load_AUTOVC_name)
         au_data += au_data_i
+
+        print('Processed audio file', ain)
     if (os.path.isfile('examples/tmp.wav')):
         os.remove('examples/tmp.wav')
 
