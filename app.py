@@ -258,17 +258,14 @@ def voice_to_video():
         fl = fl.reshape((-1, 68, 3))
 
         ''' STEP 6: Imag2image translation '''
-        """
+
         if "model_img" not in gvs[image_file]:
             model_img = Image_translation_block(gvs[image_file]["opt_parser"], single_test=True)
             gvs[image_file]["model_img"] = model_img
-        """
-
-        model_img = Image_translation_block(gvs[image_file]["opt_parser"], single_test=True)
 
         with torch.no_grad():
             # gvs[image_file]["model_img"].single_test(jpg=gvs[image_file]["img"], fls=fl, filename=fls[i], prefix=gvs[image_file]["opt_parser"].jpg.split('.')[0])
-            model_img.single_test(jpg=gvs[image_file]["img"], fls=fl, filename=fls[i], prefix=gvs[image_file]["opt_parser"].jpg.split('.')[0])
+            gvs[image_file]["model_img"].single_test(jpg=gvs[image_file]["img"], fls=fl, filename=fls[i], prefix=gvs[image_file]["opt_parser"].jpg.split('.')[0])
             print('finish image2image gen')
         os.remove(os.path.join('examples', fls[i]))
         print("{} / {}: Landmark->Face...".format(i + 1, len(fls)), file=sys.stderr)
