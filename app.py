@@ -140,9 +140,9 @@ def voice_to_video():
     if "predictor" not in gvs:
         predictor = face_alignment.FaceAlignment(face_alignment.LandmarksType._3D, device='cpu', flip_input=True)
         gvs["predictor"] = predictor
-    if "shapes" not in gvs[image_file]:
-        shapes = gvs["predictor"].get_landmarks(gvs[image_file]["img"][:])
-        gvs[image_file]["shapes"] = shapes
+    #if "shapes" not in gvs[image_file]:
+    shapes = gvs["predictor"].get_landmarks(gvs[image_file]["img"][:])
+    gvs[image_file]["shapes"] = shapes
 
     if (not gvs[image_file]["shapes"] or len(gvs[image_file]["shapes"]) != 1):
         print('Cannot detect face landmarks. Exit.')
