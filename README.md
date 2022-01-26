@@ -100,9 +100,9 @@ to amply lip motion (in x/y-axis direction) and head motion displacements, defau
 
 - animate one of the existing puppets
 
-| Puppet Name |  wilk | roy | sketch | color | cartoonM | danbooru1 | 
+| Puppet Name |  wilk | smiling_person | sketch | color | cartoonM | danbooru1 | 
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Image  | ![img](examples_cartoon/wilk_fullbody.jpg)  | ![img](examples_cartoon/roy_full.png)  | ![img](examples_cartoon/sketch.png)  | ![img](examples_cartoon/color.jpg)  | ![img](examples_cartoon/cartoonM.png)  | ![img](examples_cartoon/danbooru1.jpg)  |
+| Image  | ![img](examples_cartoon/wilk_fullbody.jpg)  | ![img](examples_cartoon/smiling_person_full.png)  | ![img](examples_cartoon/sketch.png)  | ![img](examples_cartoon/color.jpg)  | ![img](examples_cartoon/cartoonM.png)  | ![img](examples_cartoon/danbooru1.jpg)  |
 
 ```
 python main_end2end_cartoon.py --jpg <cartoon_puppet_name_with_extension> --jpg_bg <puppet_background_with_extension>
@@ -138,7 +138,7 @@ python main_gen_new_puppet.py <your_puppet_with_file_extension>
     - Estimate the closed mouth landmarks to serve as network input.
     - Delauney triangulate the image with landmarks. 
     
-- check puppet name `roy_example.png` for an example. 
+- check puppet name `smiling_person_example.png` for an example. 
 
 | ![img](doc/landmark_adjust.png) | ![img](doc/landmark_closemouth.png) | ![img](doc/landmark_delauney.png)
 | :---: | :---: | :---: |
