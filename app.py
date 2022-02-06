@@ -80,8 +80,8 @@ def random_filename(ext):
     return filename
 
 
-@app.route('/voice-to-video', methods=['GET', 'POST'])
-def voice_to_video():
+@app.route('/voice-to-video-cartoon', methods=['GET', 'POST'])
+def voice_to_video_cartoon():
     start = timer()
 
     global gvs
@@ -322,8 +322,8 @@ GEN_FLS = True
 DEMO_CH = 'wilk.png'
 
 
-@app.route('/voice-to-video-cartoon', methods=['GET', 'POST'])
-def voice_to_video_cartoon():
+@app.route('/voice-to-video', methods=['GET', 'POST'])
+def voice_to_video():
     start = timer()
 
     global gvs, DEMO_CH
@@ -346,9 +346,11 @@ def voice_to_video_cartoon():
     if "parser" not in gvs[image_file]:
         parser = argparse.ArgumentParser()
         parser.add_argument('--jpg', type=str, required=True,
-                            help='Puppet image name to animate (with filename extension), e.g. wilk.png')
+                            help='Puppet image name to animate (with filename extension), e.g. wilk.png',
+                            default='{}'.format(image_file))
         parser.add_argument('--jpg_bg', type=str, required=True,
-                            help='Puppet image background (with filename extension), e.g. wilk_bg.jpg')
+                            help='Puppet image background (with filename extension), e.g. wilk_bg.jpg',
+                            default='{}'.format("wilk_bg.jpg"))
         parser.add_argument('--inner_lip', default=False, action='store_true',
                             help='add this if the puppet is created with only inner lip landmarks')
 
@@ -482,6 +484,8 @@ def voice_to_video_cartoon():
 
     print(fls_names)
 
+    response = {}
+
     for i in range(0, len(fls_names)):
         fl = np.loadtxt(os.path.join('examples_cartoon', fls_names[i])).reshape((-1, 68, 3))
         output_dir = os.path.join('examples_cartoon', fls_names[i][:-4])
@@ -571,38 +575,25 @@ def voice_to_video_cartoon():
                 os.path.join(cur_dir, '..', '..', '..', 'examples', ain),
                 os.path.join(cur_dir, '..', 'out.mp4')
             ))
-    print("Done!", file=sys.stderr)
-    response = {}
-
-    for ain in ains:
-        OUTPUT_MP4_NAME = '{}_pred_fls_{}_audio_embed.mp4'.format(
-            gvs[image_file]["opt_parser"].jpg.split('.')[0],
-            ain.split('.')[0]
-        )
 
         OUTPUT_MP4_NAME_CR = random_filename(".mp4")
-
-        """
-        for filee in os.listdir(input_dir):
-            if filee.endswith(OUTPUT_MP4_NAME):
-                print(filee)
-        """
-        input_name = input_dir + OUTPUT_MP4_NAME
-        output_name = output_dir + OUTPUT_MP4_NAME_CR
-        if crop:
-            bashCommand = "sudo ffmpeg -i " + input_name + " -vf crop=256:256:256:0 -strict -2 -y " + output_name
-        else:
-            bashCommand = "sudo cp " + input_name + " " + output_name
+        input_name = os.path.join(cur_dir, '..', 'out.mp4')
+        output_name = os.path.join(cur_dir, '..', '..', '..', 'examples', OUTPUT_MP4_NAME_CR)
+        bashCommand = "sudo cp " + input_name + " " + output_name
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
 
-        # s3.meta.client.upload_file('examples/{}'.format(OUTPUT_MP4_NAME_CR), s3_bucket_name, 'avatar/' +
-        # OUTPUT_MP4_NAME_CR)
-        response["avatar_output"] = OUTPUT_MP4_NAME_CR
-    response = jsonify(response)
+        output_name = os.path.join(cur_dir, '..', '..', '..', 'examples_cartoon', OUTPUT_MP4_NAME_CR)
+        bashCommand = "sudo cp " + input_name + " " + output_name
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        output, error = process.communicate()
 
+        response["avatar_output"] = OUTPUT_MP4_NAME_CR
+
+
+    response = jsonify(response)
     end = timer()
-    print("Voice To Video Response Time ", end - start)
+    print("Voice To Video Cartoon Response Time ", end - start)
 
     return response
 
