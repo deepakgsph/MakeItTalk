@@ -345,10 +345,10 @@ def voice_to_video():
 
     if "parser" not in gvs[image_file]:
         parser = argparse.ArgumentParser()
-        parser.add_argument('--jpg', type=str, required=True,
+        parser.add_argument('--jpg', type=str,
                             help='Puppet image name to animate (with filename extension), e.g. wilk.png',
                             default='{}'.format(image_file))
-        parser.add_argument('--jpg_bg', type=str, required=True,
+        parser.add_argument('--jpg_bg', type=str,
                             help='Puppet image background (with filename extension), e.g. wilk_bg.jpg',
                             default='{}'.format("wilk_bg.jpg"))
         parser.add_argument('--inner_lip', default=False, action='store_true',
